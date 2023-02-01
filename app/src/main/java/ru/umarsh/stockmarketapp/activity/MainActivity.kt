@@ -1,4 +1,4 @@
-package ru.umarsh.stockmarketapp
+package ru.umarsh.stockmarketapp.activity
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -15,6 +15,7 @@ import ru.umarsh.stockmarketapp.ui.theme.StockMarketAppTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //OXW9NLVC6DCVK7HG
         setContent {
             StockMarketAppTheme {
 

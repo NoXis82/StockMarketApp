@@ -59,7 +59,6 @@ class StockRepositoryImpl @Inject constructor(
                     it.toCompanyListing()
                 }))
                 emit(Resource.Loading(false))
-
             }
         }
 

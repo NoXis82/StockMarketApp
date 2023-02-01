@@ -4,8 +4,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
 import ru.umarsh.stockmarketapp.BuildConfig
+import ru.umarsh.stockmarketapp.data.csv.CSVParser
 import ru.umarsh.stockmarketapp.data.local.StockDataBase
 import ru.umarsh.stockmarketapp.data.mapper.toCompanyListing
+import ru.umarsh.stockmarketapp.data.mapper.toCompanyListingEntity
 import ru.umarsh.stockmarketapp.data.remote.StockApi
 import ru.umarsh.stockmarketapp.domain.model.CompanyListing
 import ru.umarsh.stockmarketapp.domain.repository.StockRepository
@@ -17,7 +19,8 @@ import javax.inject.Singleton
 @Singleton
 class StockRepositoryImpl @Inject constructor(
     val stockApi: StockApi,
-    val stockDataBase: StockDataBase
+    val stockDataBase: StockDataBase,
+    val companyListingsParser: CSVParser<CompanyListing>
 ) : StockRepository {
 
     private val stockDao = stockDataBase.stockDao
@@ -38,13 +41,25 @@ class StockRepositoryImpl @Inject constructor(
             }
             val remoteListings = try {
                 val response = stockApi.getListingsStatus(BuildConfig.API_KEY)
-                response.byteStream()
+                companyListingsParser.parse(response.byteStream())
+
             } catch (e: IOException) {
                 e.printStackTrace()
                 emit(Resource.Error(">>> Error: ${e.message}"))
+                null
             } catch (e: HttpException) {
                 e.printStackTrace()
                 emit(Resource.Error(">>> Error: ${e.message}"))
+                null
+            }
+            remoteListings?.let { listings ->
+                stockDao.clear()
+                stockDao.insertCompanyListings(listings.map { it.toCompanyListingEntity() })
+                emit(Resource.Success(stockDao.searchCompanyListing("").map {
+                    it.toCompanyListing()
+                }))
+                emit(Resource.Loading(false))
+
             }
         }
 
